@@ -1,105 +1,92 @@
-<script setup lang="ts">
-import { useI18n } from 'vue-i18n';
+<script lang="ts">
+import { defineComponent, onMounted, ref } from 'vue';
+import {
+  Box,
+  Camera,
+  LambertMaterial,
+  PointLight,
+  Renderer,
+  Scene,
+  Sphere,
+  AmbientLight,
+  BasicMaterial,
+  Texture,
+  GltfModel,
+} from 'troisjs';
 
-import {  ref } from 'vue';
-import { useTheme } from '/@/composables';
+export default defineComponent({
+  name: 'Home',
+  components: {
+    Box,
+    Camera,
+    LambertMaterial,
+    PointLight,
+    Renderer,
+    Scene,
+    AmbientLight,
+    Sphere,
+    BasicMaterial,
+    Texture,
+    GltfModel,
+  },
+  setup() {
+    const renderer = ref(null);
+    const box = ref(null);
+    const sphere = ref(null);
 
+    function onReady() {
+      console.log('Render is ready');
+    }
 
-const { t, availableLocales, locale } = useI18n();
-
-const toggleLocales = () => {
-  const locales = availableLocales;
-  locale.value =
-    locales[(locales.indexOf(locale.value) + 1) % locales.length];
-};
-
-const { toggleDark } = useTheme();
-
-const show = ref(false);
-
-setTimeout(() => {
-  show.value = true;
-}, 1000);
-
+    onMounted(() => {
+      renderer?.value?.onBeforeRender(() => {
+        box.value.mesh.rotation.x += 0.01;
+        // sphere.value.mesh.rotation.y += 0.01;
+      });
+    });
+    return {
+      renderer,
+      box,
+      sphere,
+      onReady,
+    };
+  },
+});
 </script>
+
 <template>
-  <div class="container max-w-3xl mx-auto mt-60">
-    <div class="h-60 mb-8">
-      <transition
-        enter-active-class="transition ease-out duration-1000 transform"
-        enter-from-class="-translate-x-100 opacity-0"
-        enter-to-class="translate-x-0 opacity-100"
-        leave-active-class="transition ease-in duration-1000 transform"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <img
-          v-if="show"
-          alt="Vitesome logo"
-          class="w-52 mx-auto mb-12"
-          :src="'imagotype.svg'"
+  <div class="space">
+    <Renderer resize="window" orbit-ctrl ref="renderer" alpha="0">
+      <Camera :position="{ z: 10 }" />
+      <Scene>
+        <PointLight :position="{ y: 50, z: 50 }" />
+        <AmbientLight />
+        <Box ref="box" :rotation="{ y: Math.PI / 4, z: Math.PI / 4 }">
+          <BasicMaterial color="#7F8487" />
+        </Box>
+        <Sphere
+          ref="sphere"
+          :position="{ x: 25, y: 10, z: -45 }"
+          :radius="8"
+          heightSegments="100"
+        >
+          <BasicMaterial color="#fff" />
+        </Sphere>
+        <GltfModel
+          src="../../public/models/rocket/scene.gltf"
+          @load="onReady"
+          :position="{ x: -1, y: 0, z: 8 }"
+          :rotation="{ x:Math.PI / -50}"
         />
-      </transition>
-    </div>
-
-    <HelloWorld :msg="t('hello') + ' 👋 ' + t('welcome')" />
-
-    <footer class="text-center">
-      <ul class="flex justify-between w-1/3 mx-auto mb-8">
-        <li class="cursor-pointer text-2xl">
-          <a
-            href="#"
-            @click="toggleLocales"
-            class="footer-link text-cyan-700 hover:text-cyan-500"
-            :title="t('toggle_language')"
-          >
-            <i class="i-ph-translate-bold" />
-          </a>
-        </li>
-        <li class="cursor-pointer text-2xl">
-          <a
-            href="#"
-            @click="toggleDark"
-            class="text-cyan-700 hover:text-cyan-500"
-            :title="t('toggle_theme')"
-          >
-            <i i="ph-sun dark:ph-moon" />
-          </a>
-        </li>
-        <li class="cursor-pointer text-2xl">
-          <a
-            href="https://github.com/alvarosabu"
-            rel="noreferrer"
-            target="_blank"
-            class="footer-link text-cyan-700 hover:text-cyan-500"
-            title="Github repo"
-          >
-            <i class="i-ph-github-logo" />
-          </a>
-        </li>
-      </ul>
-
-      <span class="text-xs"
-        >{{ t('made_by') }}
-        <a
-          class="footer-link text-cyan-400 hover:text-cyan-500"
-          href="https://github.com/alvarosabu/vitesome"
-          rel="noreferrer"
-          target="_blank"
-          >Alvaro Saburido</a
-        ></span
-      >
-    </footer>
+      </Scene>
+    </Renderer>
   </div>
 </template>
 
 <style>
-a,
-.footer-link {
-  @apply transition-all ease-out duration-100;
-}
-
-.footer-link {
-  opacity: 0.8;
+.space {
+  background-image: url('../../public/texture3.jpg');
+  background-size: 100% 100vh;
+  background-repeat: no-repeat;
 }
 </style>
